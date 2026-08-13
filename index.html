@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS // Neural Interface</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: #050811;
+            color: #00f3ff;
+            font-family: monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            text-align: center;
+        }
+        .header { letter-spacing: 3px; font-size: 0.8rem; margin-bottom: 40px; color: rgba(0, 243, 255, 0.7); }
+        .nexus-core {
+            width: 170px;
+            height: 170px;
+            border-radius: 50%;
+            border: 3px solid #00f3ff;
+            box-shadow: 0 0 30px #00f3ff, inset 0 0 30px #00f3ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: rgba(0, 243, 255, 0.05);
+            transition: transform 0.2s;
+        }
+        .nexus-core:active { transform: scale(0.92); }
+        #status { margin-top: 30px; font-size: 1rem; letter-spacing: 2px; }
+        #response-box { margin-top: 20px; color: #fff; font-size: 0.95rem; line-height: 1.4; max-width: 90%; }
+    </style>
+</head>
+<body>
+
+    <div class="header">SYSTEM LOG: NEXUS CORE V1.0</div>
+
+    <div class="nexus-core" id="coreBtn">
+        <span id="coreLabel" style="font-weight: bold; letter-spacing: 2px;">INITIALIZE</span>
+    </div>
+
+    <p id="status">STANDBY // TAP CORE TO SPEAK</p>
+    <div id="response-box"></div>
+
+    <script>
+        // Tera Live Koyeb Backend URL
+        const BACKEND_URL = "https://beautiful-margalo-adarshrajput5-cf33c0da.koyeb.app/api/chat";
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+
+        if (recognition) { recognition.lang = 'hi-IN'; }
+
+        const coreBtn = document.getElementById('coreBtn');
+        const coreLabel = document.getElementById('coreLabel');
+        const statusText = document.getElementById('status');
+        const responseBox = document.getElementById('response-box');
+
+        coreBtn.onclick = () => {
+            if (!recognition) {
+                alert("Chrome browser use karein voice commands ke liye!");
+                return;
+            }
+            recognition.start();
+            statusText.innerText = "LISTENING COMMAND...";
+            coreLabel.innerText = "LISTENING";
+        };
+
+        if (recognition) {
+            recognition.onresult = async (event) => {
+                const command = event.results[0][0].transcript;
+                statusText.innerText = "PROCESSING NEURAL CORE...";
+                coreLabel.innerText = "THINKING";
+                responseBox.innerText = `Commander: ${command}`;
+
+                try {
+                    const res = await fetch(BACKEND_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: command })
+                    });
+                    const data = await res.json();
+                    if (data.reply) {
+                        responseBox.innerText = `NEXUS: ${data.reply}`;
+                        speak(data.reply);
+                    }
+                } catch (err) {
+                    statusText.innerText = "BACKEND DISCONNECTED!";
+                    coreLabel.innerText = "ERROR";
+                }
+            };
+        }
+
+        function speak(text) {
+            statusText.innerText = "TRANSMITTING VOICE...";
+            coreLabel.innerText = "SPEAKING";
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'hi-IN';
+            utterance.onend = () => {
+                statusText.innerText = "STANDBY // TAP CORE TO SPEAK";
+                coreLabel.innerText = "INITIALIZE";
+            };
+            window.speechSynthesis.speak(utterance);
+        }
+    </script>
+</body>
+</html>
