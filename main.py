@@ -18,7 +18,8 @@ app.add_middleware(
 API_KEY = os.getenv("GEMINI_API_KEY")
 if API_KEY:
     genai.configure(api_key=API_KEY)
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    # Updated to latest stable working model
+    model = genai.GenerativeModel("gemini-2.5-flash")
 else:
     model = None
 
@@ -47,4 +48,4 @@ async def chat(query: ChatQuery):
         return {"reply": response.text}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-      
+        
